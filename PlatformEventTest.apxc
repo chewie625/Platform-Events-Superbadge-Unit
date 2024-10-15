@@ -1,0 +1,30 @@
+@isTest
+public class PlatformEventTest {
+    @isTest static void test1() {
+        // Create test event instance
+        AsyncApexJob job = new AsyncApexJob();
+        BatchApexErrorEvent error = new BatchApexErrorEvent(Message= 'PilotRatingBatch',
+                                                            AsyncApexJobId=job.id);
+        
+        
+        Test.startTest();
+        // Call method to publish events
+        Database.SaveResult sr = EventBus.publish(error);
+        Test.stopTest();
+        // Perform validation here
+        // Verify that the publish was successful
+        System.assertEquals(true, sr.isSuccess());
+        List<Error_Log__c> errorLogList = [SELECT Async_Apex_Job_Id__c FROM Error_Log__c WHERE Async_Apex_Job_Id__c =:error.AsyncApexJobId];
+        
+        // Log the error message
+        for(Database.Error err : sr.getErrors()) {
+            System.debug('Error returned: ' +
+                         err.getStatusCode() +
+                         ' - ' +
+                         err.getMessage()+' - '+err.getFields());
+        }
+        // Validate that this case was found.
+        // There is only one error log
+        System.assertEquals(1, errorLogList.size());
+    }
+}
